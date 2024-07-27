@@ -1,0 +1,181 @@
+%YAML 1.2
+---
+name: nablo
+file_extensions:
+  - nablo
+scope: source.nablo
+
+contexts:
+  main:
+    # comment
+    - match: '[^\x00-\x7F]'
+      scope: invalid.illegal.non-ascii.nablo
+    - match: '//'
+      scope: punctuation.definition.comment.nablo
+      push: line_comment
+    - match: '/\*'
+      scope: punctuation.definition.comment.nablo
+      push: block_comment
+    # number
+    - match: \b\d+(.\d*)?\b
+      scope: constant.numeric.nablo
+    # const
+    - match: \b(true|false|none|self)\b
+      scope: constant.language.nablo
+    # caculator
+    - match: '[=+*/^&|!<>-]'
+      scope: keyword.operator.nablo
+    # end
+    - match: ';'
+      scope: punctuation.terminator.nablo
+    # sperator
+    - match: (\.|:)
+      scope: punctuation.separator.nablo
+    - match: (Pass|Block)
+      scope: support.type.nablo
+      pop: true
+
+    # string
+    - match: '"'
+      scope: punctuation.definition.string.begin.nablo
+      push: string
+
+    # if else return break continue loop
+    - match: \b(if|else)\b
+      scope: keyword.control.conditional.nablo
+    - match: \b(return|break|continue|loop)\b
+      scope: keyword.control.nablo
+
+    # function use
+    - match: ([A-Za-z_][A-Za-z0-9_]*)\s*\(
+      captures: 
+        1: variable.function.nablo
+
+    # function delaration
+    - match: \b(function|func|fn)\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(
+      captures:
+        1: keyword.declaration.function
+        2: entity.name.function.nablo
+      push: function_var
+
+    # object/struct delaration
+    - match: \b(object|struct)\s*([A-Za-z_][A-Za-z0-9_]*)\s*
+      captures:
+        1: keyword.declaration.struct.nablo
+        2: entity.name.struct.nablo
+
+    # object/struct use
+    - match: ([A-Z_][A-Za-z0-9_]*)\s*\{
+      captures:
+        1: storage.type.struct.nablo
+
+    # imply
+    - match: \b(impl)\s*(([A-Za-z_][A-Za-z0-9_]*)\s*(for))?\s*([A-Za-z_][A-Za-z0-9_]*)
+      captures: 
+        1: keyword.declaration.impl
+        3: storage.type.trait.nablo
+        4: keyword.other.nablo
+        5: variable.parameter.nablo
+
+    # ask keyword
+    - match: \b(ask)
+      scope: keyword.control.nablo
+
+    # ask arm
+    - match: \(([A-Za-z_][A-Za-z0-9_]*)\)\s*(=\>)
+      captures: 
+        1: variable.parameter.nablo
+        2: keyword.operator.nablo
+
+    # interface/trait delaration
+    - match: \b(interface|trait)\s*([A-Za-z_][A-Za-z0-9_]*)\s*
+      captures:
+        1: keyword.declaration.trait.nablo
+        2: entity.name.trait.nablo
+
+    # macro delaration
+    - match: \b(macro!)\s*([A-Za-z_][A-Za-z0-9_]*!)\s*\(([A-Za-z_][A-Za-z0-9_]*)\)
+      captures:
+        1: support.function.nablo
+        2: entity.other.inherited-class.nablo
+        3: variable.parameter.nablo
+
+    # macro use
+    - match: ([A-Za-z_][A-Za-z0-9_]*!)\s*\(
+      captures: 
+        1: support.function.nablo
+
+  # string
+  string:
+    - meta_scope: string.quoted.double.nablo
+    - match: '"'
+      scope: punctuation.definition.string.end.nablo
+      pop: true
+    - match: (\\\\|\\\")
+      scope: constant.character.escape.nablo
+
+  # function delaration
+  function_var:
+    - match: self
+      scope: variable.parameter.nablo
+    - match: ([A-Za-z_][A-Za-z0-9_]*)(:)\s*
+      captures:
+        1: variable.parameter.nablo
+        2: punctuation.separator.nablo
+      push: varible_type
+    - match: (,)
+      scope: punctuation.separator.nablo
+    - match: \)
+      push: function_output_var
+
+  varible_type:
+    # basic type
+    - match: \b(num|str|bool|Self)\b
+      scope: storage.type.nablo
+      pop: true
+    # dynamic/array type
+    - match: (dyn|Array)(\<)
+      captures:
+        1: support.type.nablo
+        2: punctuation.definition.generic.begin.nablo
+      push: varible_type
+    - match: (\>)
+      scope: punctuation.definition.generic.end.nablo
+      pop: true
+    # result type
+    - match: (Result)(\<)
+      captures:
+        1: support.type.nablo
+        2: punctuation.definition.generic.begin.nablo
+      push: varible_type
+    - match: (,)
+      scope: punctuation.separator.nablo
+      push: varible_type
+    - match: (\>)
+      scope: punctuation.definition.generic.end.nablo
+      pop: true
+    # other
+    - match: ([A-Za-z_][A-Za-z0-9_]*)
+      scope: storage.type.struct.nablo
+      pop: true
+
+  function_output_var:
+    - match: (-\>)
+      scope: punctuation.accessor
+      push: varible_type
+    - match: \{
+      push: main
+
+  # comment
+  line_comment:
+    - meta_scope: comment.line.double-slash.nablo
+    - match: \n
+      pop: true
+
+  block_comment:
+    - meta_scope: comment.block.nablo
+    - match: '\*/'
+      scope: punctuation.definition.comment.nablo
+      pop: true
+    - match: '[^\x00-\x7F]'
+      scope: invalid.illegal.non-ascii.nablo

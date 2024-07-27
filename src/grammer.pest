@@ -1,0 +1,85 @@
+WHITESPACE = _{ " " | "	" | NEWLINE }
+
+// Basic Types
+VarName       = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+True          = @{ "true" }
+False         = @{ "false" }
+Digit         = @{ ASCII_DIGIT }
+Number        = @{ ((Digit)+ ~ (DecimalPoint ~ Digit*)?) | "NaN" }
+AsciiComment  = _{ "!" | "@" | "#" | "$" | "%" | "^" | "&" | "(" | ")" | "-" | "_" | "=" | "+" | "{" | "}" | "[" | "]" | "|" | "\\" | "'" | "\"" | ";" | ":" | "?" | ">" | "<" | "." | "," | "`" | "~" | " " | ASCII_ALPHANUMERIC }
+StringLetter  = @{ "!" | "@" | "#" | "$" | "%" | "^" | "&" | "(" | ")" | "-" | "_" | "=" | "+" | "{" | "}" | "[" | "]" | "|" | "\\" | "'" | "\\\"" | ";" | ":" | "?" | ">" | "<" | "." | "," | "`" | "~" | " " | NEWLINE | ASCII_ALPHANUMERIC }
+StringMatch   =  { "\"" ~ StringLetter* ~ "\"" }
+Num           = @{ "num" }
+Bool          = @{ "bool" }
+String        = @{ "str" }
+Array         =  { "Array" ~ LessThan ~ Type ~ LargeThan }
+ArrayDeclare  =  { "[" ~ Element? ~ (Comma ~ Element)* ~ Comma? ~ "]" }
+SelfIdentType = @{ "Self" }
+Pass          =  { "Pass" ~ Parentheses }
+Block         =  { "Block" ~ Parentheses }
+Result        =  { "Result" ~ LessThan ~ Type ~ Comma ~ Type ~ LargeThan }
+Dynamic       =  { "dyn" ~ LessThan ~ VarName ~ LargeThan }
+None          = @{ "none" }
+Type          =  { (Num | Bool | String | SelfIdentType | Array | Result | Dynamic | VarName) }
+
+// Operator
+Equal             = _{ "=" }
+Add               = @{ "+" }
+Minus             = @{ "-" }
+Cross             = @{ "*" }
+Divid             = @{ "/" }
+Power             = @{ "^" }
+LeftParentheses   = _{ "(" }
+RightParentheses  = _{ ")" }
+LargeThan         = @{ ">" }
+LessThan          = @{ "<" }
+LargerOrEqualThan = @{ ">=" }
+LessOrEqualThan   = @{ "<=" }
+Unequal           = @{ "!=" }
+Same              = @{ "==" }
+Not               = @{ "!" }
+And               = @{ ("&&" | "&") }
+Or                = @{ ("||" | "|") }
+DecimalPoint      = @{ "." }
+
+// Grammer
+End                = _{ ";" }
+LeftCurlyBrackets  = _{ "{" }
+RightCurlyBrackets = _{ "}" }
+Comma              = _{ "," }
+Colon              = _{ ":" }
+Function           =  { VarName ~ LeftParentheses ~ Caculation? ~ (Comma ~ Caculation)* ~ Comma? ~ RightParentheses }
+Macro              =  { VarName ~ "!" ~ LeftParentheses ~ (Statement | Caculation)? ~ (Comma ~ (Statement | Caculation))* ~ Comma? ~ RightParentheses }
+
+// Statement
+If                   =  { "if" ~ Caculation ~ Field ~ (Else ~ "if" ~ Caculation ~ Field)* ~ (Else ~ Field)? ~ End? }
+Else                 =  { "else" }
+Loop                 =  { "loop" ~ LeftCurlyBrackets ~ Statement* ~ RightCurlyBrackets ~ End? }
+Break                =  { "break" ~ End }
+Continue             =  { "continue" ~ End }
+Return               =  { "return" ~ Caculation? ~ End }
+SelfIdent            =  { "self" }
+Ask                  =  { "ask" ~ Element ~ LeftCurlyBrackets ~ LeftParentheses ~ VarName ~ RightParentheses ~ "=>" ~ Field ~ LeftParentheses ~ VarName ~ RightParentheses ~ "=>" ~ Field ~ RightCurlyBrackets ~ End? }
+NewFunction          =  { ("fn" | "function" | "func") ~ VarName ~ LeftParentheses ~ (SelfIdent | (VarName ~ Colon ~ Type))? ~ (Comma ~ VarName ~ Colon ~ Type)* ~ Comma? ~ RightParentheses ~ ("->" ~ Type)? ~ Field }
+NewMacro             =  { "macro" ~ "!" ~ VarName ~ "!" ~ LeftParentheses ~ VarName ~ RightParentheses ~ Field }
+NewStruct            =  { ("struct" | "object") ~ VarName ~ LeftCurlyBrackets ~ (VarName ~ Colon ~ Type)? ~ (Comma ~ VarName ~ Colon ~ Type)* ~ Comma? ~ RightCurlyBrackets ~ End? }
+StructAssign         =  { VarName ~ LeftCurlyBrackets ~ (VarName ~ Colon ~ Element)? ~ (Comma ~ VarName ~ Colon ~ Element)* ~ Comma? ~ RightCurlyBrackets }
+VistField            =  { DecimalPoint ~ (Function | VarName) }
+VistStructMethodPath =  { Type ~ "::" ~ Function }
+Field                =  { LeftCurlyBrackets ~ Statement* ~ RightCurlyBrackets ~ (Comma | End)? }
+Trait                =  { ("trait" | "interface") ~ VarName ~ LeftCurlyBrackets ~ NewFunction* ~ RightCurlyBrackets }
+Imply                =  { ("imply" | "impl") ~ (VarName ~ "for")? ~ Type ~ LeftCurlyBrackets ~ (NewFunction)* ~ RightCurlyBrackets }
+GetValue             =  { VarName ~ "[" ~ Caculation ~ "]" }
+Assignment           =  { VarName ~ Equal ~ Caculation ~ End }
+NegOp                =  { Minus ~ Element }
+NotOp                =  { Not ~ Element }
+Element              =  { (VistStructMethodPath | Pass | Block | None | Function | StructAssign | NotOp | NegOp | GetValue | Parentheses | True | False | VarName | Number | StringMatch | ArrayDeclare) ~ VistField? }
+Parentheses          =  { LeftParentheses ~ Caculation? ~ RightParentheses }
+Operator             = _{ Add | Minus | Cross | Divid | Power | LargerOrEqualThan | LessOrEqualThan | LargeThan | LessThan | Unequal | Same | And | Or }
+Caculation           =  { Element ~ (Operator ~ Element)* }
+Comment              = _{ "/*" ~ (AsciiComment | ("*" ~ (AsciiComment | "*")) | "/")* ~ "*/" }
+Statement            =  { Ask | Continue | Break | Loop | If | Return | Assignment | MacroStatement | FunctionStatement | Trait | Imply | NewMacro | NewFunction | NewStruct | Field | Comment | (VistStructMethodPath ~ End) | ElementUse }
+FunctionStatement    =  { Function ~ End }
+ElementUse           =  { VarName ~ DecimalPoint ~ Function ~ End }
+MacroStatement       =  { Macro ~ End }
+Statements           =  { SOI? ~ Statement* ~ EOI? }

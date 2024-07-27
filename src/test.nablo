@@ -1,0 +1,26 @@
+fn fibonacci(n: num) -> num {
+    if n == 0 {
+        return 0;
+    } else if n == 1 {
+        return 1;
+    } else {
+        a = 0;
+        b = 1;
+        i = 2;
+        loop {
+            if i > n {
+                break;
+            }
+            c = a + b;
+            a = b;
+            b = c;
+            i = i + 1;
+            println(i);
+        }
+        return b;
+    }
+}
+
+n = 10;
+result = fibonacci(n);
+println("Fibonacci number at position " + format(n) + " is " + format(result));
